@@ -1,9 +1,11 @@
 package com.ipem.api.modules.usuario.service;
 
+import com.ipem.api.modules.usuario.dto.UsuarioRequestDTO;
+import com.ipem.api.modules.usuario.dto.UsuarioResponseDTO;
 import com.ipem.api.modules.usuario.model.Usuario;
 import com.ipem.api.modules.usuario.repository.UsuarioRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import lombok.RequiredArgsConstructor; // Gera o construtor para campos final 🧩
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,26 +14,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class UsuarioService {
 
     private final UsuarioRepository repository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public UsuarioResponseDTO cadastrar(UsuarioRequestDTO dto) {
-        if (repository.existsById(dto.id())) {
-            throw new RuntimeException("Número de registro já cadastrado.");
-        }
-        if (repository.existsByEmail(dto.email())) {
-            throw new RuntimeException("E-mail já cadastrado.");
-        }
+        Usuario novoUsuario = Usuario.builder()
+                .id(dto.id())
+                .nome(dto.nome())
+                .email(dto.email())
+                .permissao(dto.permissao())
+                .senha(passwordEncoder.encode(dto.senha()))
+                .build();
 
-        Usuario usuario = new Usuario();
-        usuario.setId(dto.id());
-        usuario.setNome(dto.nome());
-        usuario.setEmail(dto.email());
-        usuario.setPermissao(dto.permissao());
-        usuario.setSenha(passwordEncoder.encode(dto.senha()));
-
-        repository.save(usuario);
-
-        return new UsuarioResponseDTO(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getPermissao());
+        repository.save(novoUsuario);
+        return new UsuarioResponseDTO(novoUsuario.getId(), novoUsuario.getNome(), novoUsuario.getEmail(), novoUsuario.getPermissao());
     }
 }

@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,7 +17,8 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Usuario extends BaseEntity {
+@Builder
+public class Usuario extends BaseEntity implements UserDetails {
 
     @Id
     @Column(name = "num_registro", length = 5)
@@ -37,17 +39,15 @@ public class Usuario extends BaseEntity {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if(this.permissao == Permissao.ADMINISTRADOR) {
-            return List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRADOR"), new SimpleGrantedAuthority("ROLE_TECNICO"));
-        }
-        return List.of(new SimpleGrantedAuthority("ROLE_TECNICO"));
+        String role = (this.permissao == Permissao.ADMINISTRADOR) ? "ROLE_ADMINISTRADOR" : "ROLE_TECNICO";
+        return List.of(new SimpleGrantedAuthority(role));
     }
 
     @Override
-    public String getUsername() { return email; }
+    public String getPassword() { return this.senha; }
 
     @Override
-    public String getPassword() { return senha; }
+    public String getUsername() { return this.email; }
 
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
