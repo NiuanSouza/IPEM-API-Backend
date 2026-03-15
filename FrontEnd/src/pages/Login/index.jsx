@@ -15,7 +15,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post("/login", {
+      const response = await api.post("/auth/login", {
         email: values.email,
         senha: values.senha,
       });
@@ -35,7 +35,7 @@ const Login = () => {
     } catch (error) {
       showModal(
         error.response?.data?.error || "Erro ao realizar login no sistema.",
-        "error"
+        "error",
       );
     }
   };

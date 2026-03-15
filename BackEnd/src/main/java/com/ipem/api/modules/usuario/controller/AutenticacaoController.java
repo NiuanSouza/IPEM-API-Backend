@@ -3,32 +3,44 @@ package com.ipem.api.modules.usuario.controller;
 import com.ipem.api.infrastructure.security.TokenService;
 import com.ipem.api.modules.usuario.dto.AutenticacaoDTO;
 import com.ipem.api.modules.usuario.dto.LoginResponseDTO;
+import com.ipem.api.modules.usuario.dto.UsuarioResponseDTO;
 import com.ipem.api.modules.usuario.model.Usuario;
-import com.ipem.api.modules.usuario.repository.UsuarioRepository;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/auth")
-@RequiredArgsConstructor
 public class AutenticacaoController {
 
-    private final UsuarioRepository repository;
-    private final PasswordEncoder passwordEncoder;
-    private final TokenService tokenService;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private TokenService tokenService;
 
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody AutenticacaoDTO data) {
-        var usuario = repository.findByEmail(data.email())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    public ResponseEntity login(@RequestBody @Valid AutenticacaoDTO data) {
+        var usernamePassword = new UsernamePasswordAuthenticationToken(data.email(), data.senha());
+        var auth = this.authenticationManager.authenticate(usernamePassword);
 
-        if (passwordEncoder.matches(data.senha(), usuario.getSenha())) {
-            var token = tokenService.gerarToken(usuario);
-            return ResponseEntity.ok(new LoginResponseDTO(token));
-        }
+        Usuario usuario = (Usuario) auth.getPrincipal();
 
-        return ResponseEntity.status(403).body("Credenciais inválidas");
+        var token = tokenService.gerarToken(usuario);
+
+        UsuarioResponseDTO userDto = new UsuarioResponseDTO(
+                usuario.getId(),
+                usuario.getNome(),
+                usuario.getEmail(),
+                usuario.getPermissao()
+        );
+
+        return ResponseEntity.ok(new LoginResponseDTO(token, userDto));
     }
 }

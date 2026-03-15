@@ -1,3 +1,8 @@
 package com.ipem.api.modules.usuario.dto;
 
-public record LoginResponseDTO(String token) {}
+import com.ipem.api.modules.usuario.model.enums.Permissao;
+
+public record LoginResponseDTO(
+        String token,
+        UsuarioResponseDTO user
+) {}
