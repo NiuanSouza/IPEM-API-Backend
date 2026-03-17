@@ -9,8 +9,15 @@ function Profile() {
   const [dropdownAberto, setDropdownAberto] = useState(false);
 
   const [usuario, setUsuario] = useState(() => {
-    const userStorage = localStorage.getItem("@Ipem:user");
-    return userStorage ? JSON.parse(userStorage) : null;
+    try {
+      const userStorage = localStorage.getItem("@Ipem:user");
+      if (userStorage && userStorage !== "undefined") {
+        return JSON.parse(userStorage);
+      }
+    } catch (error) {
+      console.error("Erro ao ler usuário do localStorage", error);
+    }
+    return null;
   });
 
   const formatarNomeExibicao = (nome) => {
@@ -35,7 +42,6 @@ function Profile() {
     setUsuario(null);
     setDropdownAberto(false);
     navigate("/login");
-    window.location.reload();
   };
 
   return (
@@ -57,7 +63,7 @@ function Profile() {
           {usuario ? (
             <>
               <span className="welcome-text">
-                Olá, {usuario.nome.split(" ")[0]}
+                Olá, {usuario.nome?.split(" ")[0] || "Usuário"}
               </span>
               <span className="account-text">Minha Conta ▼</span>
             </>

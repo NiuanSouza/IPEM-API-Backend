@@ -15,7 +15,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post("/auth/login", {
+      const response = await api.post("/usuarios/login", {
         email: values.email,
         senha: values.senha,
       });

@@ -1,0 +1,10 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: ipem_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: ipem_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
