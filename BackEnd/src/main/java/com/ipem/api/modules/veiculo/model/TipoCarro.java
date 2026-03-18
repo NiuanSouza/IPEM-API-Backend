@@ -14,5 +14,7 @@ public class TipoCarro extends BaseEntity {
     private String marca;
     private String modelo;
     private Integer ano;
+
+    @Column(name = "categoria", columnDefinition = "ENUM('passeio', 'utilidades')")
     private String categoria;
 }

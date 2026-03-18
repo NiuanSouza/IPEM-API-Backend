@@ -22,10 +22,6 @@ public class VeiculoService {
         return carroRepository.findById(prefixo);
     }
 
-    public List<Carro> listarDisponiveis() {
-        return carroRepository.findByDisponivelTrue();
-    }
-
     public Carro salvar(Carro carro) {
         return carroRepository.save(carro);
     }
