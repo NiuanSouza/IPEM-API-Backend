@@ -1,31 +1,32 @@
 CREATE TABLE tipo_carro (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    marca VARCHAR(100) NOT NULL,
-    modelo VARCHAR(100) NOT NULL,
-    ano INT NOT NULL,
-    categoria ENUM('passeio', 'utilidades') NOT NULL,
+    marca VARCHAR(100),
+    modelo VARCHAR(100),
+    ano INT,
+    categoria ENUM('passeio', 'utilidades'),
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE usuarios (
-    num_registro INT(5) PRIMARY KEY,
+    num_registro INT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
-    permissao ENUM('tecnico', 'administrador') NOT NULL,
+    permissao VARCHAR(50) NOT NULL,
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE carros (
     prefixo VARCHAR(20) PRIMARY KEY,
-    placa VARCHAR(10) NOT NULL UNIQUE,
-    tip_id INT NOT NULL,
+    placa VARCHAR(10),
+    tip_id INT,
     combustivel VARCHAR(20),
-    km_atual FLOAT DEFAULT 0,
+    km_atual FLOAT,
     proxima_troca_oleo_km FLOAT,
-    disponivel BOOLEAN DEFAULT TRUE,
+    disponivel BOOLEAN,
+    observacoes TEXT,
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_carro_tipo FOREIGN KEY (tip_id) REFERENCES tipo_carro(id)
@@ -33,13 +34,15 @@ CREATE TABLE carros (
 
 CREATE TABLE servicos (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    car_prefixo VARCHAR(20) NOT NULL,
-    usuario_registro INT(5) NOT NULL,
-    data_saida TIMESTAMP NOT NULL,
-    data_chegada TIMESTAMP NULL,
-    km_saida FLOAT NOT NULL,
-    km_chegada FLOAT NULL,
-    destino_requisitante TEXT,
+    car_prefixo VARCHAR(20),
+    usuario_registro INT,
+    data_saida DATETIME,
+    data_chegada DATETIME,
+    data_finalizacao DATETIME,
+    quilometragem_saida FLOAT,
+    quilometragem_chegada FLOAT,
+    destino_requisitante VARCHAR(255),
+    descricao TEXT,
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_servico_carro FOREIGN KEY (car_prefixo) REFERENCES carros(prefixo),
@@ -48,11 +51,11 @@ CREATE TABLE servicos (
 
 CREATE TABLE registros (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    servico_id BIGINT NOT NULL,
-    tipo_registro ENUM('CHECK_IN', 'CHECK_OUT', 'ABASTECIMENTO', 'OCORRENCIA') NOT NULL,
-    data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    km_registro FLOAT NOT NULL,
-    anotacao TEXT,
+    servico_id BIGINT,
+    tipo_registro ENUM('CHECK_IN', 'CHECK_OUT', 'ABASTECIMENTO', 'OCORRENCIA'),
+    data_registro DATETIME,
+    km_registro FLOAT,
+    anotacao VARCHAR(255),
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_registro_servico FOREIGN KEY (servico_id) REFERENCES servicos(id)
@@ -60,9 +63,9 @@ CREATE TABLE registros (
 
 CREATE TABLE abastecimentos (
     registro_id BIGINT PRIMARY KEY,
-    litros FLOAT NOT NULL,
-    preco_litro DECIMAL(10,3) NOT NULL,
-    valor_total DECIMAL(10,2) NOT NULL,
+    litros FLOAT,
+    preco_litro DOUBLE,
+    valor_total DOUBLE,
     nota_fiscal VARCHAR(50),
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

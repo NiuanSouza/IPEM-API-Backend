@@ -1,38 +1,40 @@
 package com.ipem.api.modules.usuario.controller;
 
+import com.ipem.api.modules.usuario.dto.LoginDTO;
 import com.ipem.api.modules.usuario.model.Usuario;
-import com.ipem.api.modules.usuario.repository.UsuarioRepository;
+import com.ipem.api.infrastructure.security.TokenService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/usuario")
+@RequestMapping("/login")
 @CrossOrigin(origins = "*")
 public class UsuarioController {
 
     @Autowired
-    private UsuarioRepository repository;
+    private AuthenticationManager manager;
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> dados) {
-        String email = dados.get("email").trim();
-        String senha = dados.get("senha").trim();
+    @Autowired
+    private TokenService tokenService;
 
-        Optional<Usuario> usuarioOpt = repository.findByEmail(email);
+    @PostMapping
+    public ResponseEntity<?> login(@RequestBody @Valid LoginDTO dados) {
+        var authenticationToken = new UsernamePasswordAuthenticationToken(dados.email(), dados.senha());
+        var authentication = manager.authenticate(authenticationToken);
 
-        if (usuarioOpt.isPresent()) {
-            Usuario u = usuarioOpt.get();
-            if (u.getSenha().trim().equals(senha)) {
-                return ResponseEntity.ok().body(Map.of(
-                        "mensagem", "Sucesso",
-                        "nome", u.getNome(),
-                        "permissao", u.getPermissao().toString()
-                ));
-            }
-        }
-        return ResponseEntity.status(401).body(Map.of("erro", "Senha ou usuário incorreto"));
+        var usuario = (Usuario) authentication.getPrincipal();
+        var tokenJWT = tokenService.gerarToken(usuario);
+
+        return ResponseEntity.ok(Map.of(
+                "token", tokenJWT,
+                "nome", usuario.getNome(),
+                "permissao", usuario.getPermissao().name().toLowerCase()
+        ));
     }
 }

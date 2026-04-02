@@ -1,10 +1,15 @@
-package com.ipem.api.config;
+package com.ipem.api.core.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -13,22 +18,25 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // 1. Desativa o CSRF para permitir o POST do Front-end
-                .csrf(AbstractHttpConfigurer::disable)
+        return http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(req -> {
+                    req.requestMatchers("/", "/index.html", "/css/**", "/js/**", "/img/**").permitAll();
+                    req.requestMatchers(HttpMethod.POST, "/login").permitAll();
+                    req.anyRequest().authenticated();
+                })
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+                .build();
+    }
 
-                // 2. Libera ABSOLUTAMENTE TUDO (necessário para fase de desenvolvimento)
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                )
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
 
-                // 3. Desativa as telas automáticas do Spring Security
-                .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
-
-                // 4. Permite o H2 e evita bloqueios de Headers
-                .headers(headers -> headers.frameOptions(frame -> frame.disable()));
-
-        return http.build();
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
