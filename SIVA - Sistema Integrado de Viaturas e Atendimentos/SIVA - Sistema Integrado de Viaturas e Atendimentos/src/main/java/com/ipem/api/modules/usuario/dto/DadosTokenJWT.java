@@ -1,4 +1,4 @@
 package com.ipem.api.modules.usuario.dto;
 
-public class DadosTokenJWT {
+public record DadosTokenJWT(String token) {
 }

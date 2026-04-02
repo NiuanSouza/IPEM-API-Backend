@@ -11,8 +11,8 @@ public enum Permissao {
     public static Permissao fromValue(String value) {
         if (value == null) return null;
         return Stream.of(Permissao.values())
-                .filter(p -> p.name().equalsIgnoreCase(value))
+                .filter(p -> p.name().equalsIgnoreCase(value.trim()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Permissão desconhecida: " + value));
+                .orElse(null);
     }
 }

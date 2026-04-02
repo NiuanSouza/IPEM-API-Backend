@@ -26,11 +26,12 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> {
                     req.requestMatchers(HttpMethod.POST, "/usuario/login").permitAll();
-
-                    req.requestMatchers("/", "/index.html", "/favicon.ico", "/css/**", "/js/**", "/img/**").permitAll();
-
+                    req.requestMatchers("/favicon.ico").permitAll();
+                    req.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll();
+                    req.requestMatchers("/", "/index.html", "/css/**", "/js/**", "/img/**").permitAll();
                     req.anyRequest().authenticated();
                 })
+
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .build();
     }

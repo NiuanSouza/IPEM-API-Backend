@@ -23,6 +23,7 @@ public class Usuario implements UserDetails {
     private String email;
     private String senha;
 
+    @Column(name = "permissao")
     @Enumerated(EnumType.STRING)
     private Permissao permissao;
 

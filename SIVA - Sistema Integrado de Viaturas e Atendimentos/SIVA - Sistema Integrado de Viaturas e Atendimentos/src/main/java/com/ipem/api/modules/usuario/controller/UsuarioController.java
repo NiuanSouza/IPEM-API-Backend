@@ -1,8 +1,10 @@
 package com.ipem.api.modules.usuario.controller;
 
 import com.ipem.api.infrastructure.security.TokenService;
+import com.ipem.api.modules.usuario.dto.DadosTokenJWT;
 import com.ipem.api.modules.usuario.dto.LoginDTO;
 import com.ipem.api.modules.usuario.model.Usuario;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,22 +26,19 @@ public class UsuarioController {
     private TokenService tokenService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDTO dados) {
+    public ResponseEntity<?> login(@RequestBody @Valid LoginDTO dados) {
         try {
+            System.out.println("E-mail recebido: [" + dados.email() + "]");
+            System.out.println("Senha recebida: [" + dados.senha() + "]");
+
             var authenticationToken = new UsernamePasswordAuthenticationToken(dados.email(), dados.senha());
             var authentication = manager.authenticate(authenticationToken);
 
-            var usuario = (Usuario) authentication.getPrincipal();
-            var tokenJWT = tokenService.gerarToken(usuario);
-
-            return ResponseEntity.ok(Map.of(
-                    "token", tokenJWT,
-                    "nome", usuario.getNome(),
-                    "permissao", usuario.getPermissao().name()
-            ));
+            var tokenJWT = tokenService.gerarToken((Usuario) authentication.getPrincipal());
+            return ResponseEntity.ok(new DadosTokenJWT(tokenJWT));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("erro", "E-mail ou senha inválidos"));
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
     }
 }

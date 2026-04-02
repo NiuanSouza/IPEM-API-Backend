@@ -27,28 +27,27 @@ async function btnindex() {
             // Salva os dados do usuário no navegador para usar depois
             localStorage.setItem("token", data.token);
             localStorage.setItem("usuarioNome", data.nome);
-            localStorage.setItem("usuarioPermissao", data.permissao.toUpperCase());
+            localStorage.setItem("usuarioPermissao", data.permissao); // Salva a permissão (ADMINISTRADOR ou TECNICO)
 
-            // Redireciona para a tela certa dependendo se é Gestor (Administrador) ou Técnico
-            if (data.permissao.toUpperCase() === "ADMINISTRADOR") {
+            // Redireciona para a tela certa dependendo da permissão retornada pelo Java
+            if (data.permissao === "ADMINISTRADOR") {
                 window.location.href = "telainicial-gestor.html";
             } else {
                 window.location.href = "telainicial.html";
             }
 
         } else {
-            // Se a senha estiver errada, tenta ler o JSON de erro; se falhar (403 puro), mostra mensagem padrão
+            // Tratamento de erro 401/403 vindo do Java
             try {
                 const errorData = await response.json();
                 alert(errorData.erro || "E-mail ou senha incorretos.");
             } catch (e) {
-                alert("Acesso negado ou erro no servidor (403).");
+                alert("Acesso negado ou erro nas credenciais.");
             }
         }
     } catch (error) {
-        //Mostra o erro no console
         console.error("Erro na requisição:", error);
-        alert("Erro ao tentar conectar com o servidor. Verifique se o back-end (Java) está rodando.");
+        alert("Erro ao tentar conectar com o servidor. Verifique se o back-end está rodando.");
     }
 }
 
@@ -78,15 +77,23 @@ async function efetuarLogin() {
 
         if (response.ok) {
             const data = await response.json();
-            // Limpa dados de veículos antigos ao entrar
+            // Limpa dados temporários de veículos
             localStorage.removeItem('veiculoSelecionado');
             localStorage.removeItem('quilometragemAtual');
             localStorage.removeItem('observacoes');
 
             localStorage.setItem('token', data.token);
             localStorage.setItem('usuarioNome', data.nome);
-            alert("Sucesso"); // Mensagem que você pediu
-            window.location.href = "telainicial.html";
+            localStorage.setItem('usuarioPermissao', data.permissao);
+
+            alert("Login realizado com sucesso!");
+
+            // Redirecionamento consistente
+            if (data.permissao === "ADMINISTRADOR") {
+                window.location.href = "telainicial-gestor.html";
+            } else {
+                window.location.href = "telainicial.html";
+            }
         } else {
             alert("Erro: Usuário ou senha incorretos");
         }
@@ -200,10 +207,10 @@ async function salvarVeiculoInfo() {
         if (response.ok) {
             alert('Sucesso! Informações gravadas no MySQL e no navegador.');
         } else {
-            alert('O navegador salvou, mas o servidor MySQL retornou um erro.');
+            alert('Erro ao gravar no servidor MySQL.');
         }
     } catch (error) {
-        alert('Salvo no navegador! (Nota: Servidor Offline, não enviado ao MySQL).');
+        alert('Salvo apenas no navegador local (Servidor offline ou erro de rede).');
     }
 }
 
@@ -212,14 +219,12 @@ function carregarDadosTelaInicial() {
     const infoVeiculoDiv = document.getElementById('info-veiculo');
 
     if (veiculo && infoVeiculoDiv) {
-        // Se houver veículo, preenche os dados
         infoVeiculoDiv.innerHTML = `
             <p><strong>Prefixo:</strong> ${veiculo.prefixo}</p>
             <p><strong>Placa:</strong> ${veiculo.placa}</p>
             <p><strong>Tipo:</strong> ${veiculo.tipo}</p>
         `;
     } else if (infoVeiculoDiv) {
-        // Se NÃO houver veículo, limpa o texto fixo do HTML (0000/aaa-1234)
         infoVeiculoDiv.innerHTML = `<p>Nenhum veículo selecionado.</p>`;
     }
 
@@ -242,20 +247,18 @@ async function checkoutChamado() {
 
 // --- 6. INICIALIZAÇÃO ---
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Nome do Usuário
     const nome = localStorage.getItem('usuarioNome');
     const boasVindasSpan = document.getElementById('boas-vindas');
+
     if (nome && boasVindasSpan) {
         boasVindasSpan.textContent = `Bem vindo, ${nome}!`;
     }
 
-    // 2. Carrega dados da tela
     if (document.getElementById('info-veiculo')) {
         carregarDadosTelaInicial();
 
-        //Carrega o nome do usuario na tela inicial
-        const nomeUsuario = localStorage.getItem ("usuarioNome");
-        const tituloElement = document.querySelector (".titulo");
+        const nomeUsuario = localStorage.getItem("usuarioNome");
+        const tituloElement = document.querySelector(".titulo");
         if (nomeUsuario && tituloElement){
             tituloElement.textContent = `Bem vindo, ${nomeUsuario}!`;
         }
@@ -267,27 +270,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
 // --- 7. CADASTRO DE NOVOS VEÍCULOS ---
 async function cadastrarVeiculo() {
-    // Pega os valores digitados usando os IDs
     const modelo = document.getElementById("modeloVeiculo").value.trim();
     const placa = document.getElementById("placaVeiculo").value.trim();
     const prefixo = document.getElementById("prefixoVeiculo").value.trim();
     const combustivel = document.getElementById("combustivelVeiculo").value.trim();
     const token = localStorage.getItem('token');
 
-    // Validação básica
     if (!placa || !prefixo) {
         alert("Atenção: A placa e o prefixo são obrigatórios!");
         return;
     }
 
-    // Monta o objeto para mandar pro Java (precisa ter os mesmos nomes do Carro.java)
     const dadosCarro = {
         prefixo: prefixo,
         placa: placa,
         combustivel: combustivel
-
     };
 
     try {
@@ -301,19 +301,18 @@ async function cadastrarVeiculo() {
         });
 
         if (response.ok) {
-            abrirModalConfirmacao();
-
-            // Limpa os campos da tela
+            alert("Veículo cadastrado com sucesso!");
+            // Limpa os campos
             document.getElementById("modeloVeiculo").value = "";
             document.getElementById("placaVeiculo").value = "";
             document.getElementById("prefixoVeiculo").value = "";
             document.getElementById("combustivelVeiculo").value = "";
         } else {
             const dataErro = await response.json();
-            alert("Erro: " + dataErro.error);
+            alert("Erro no cadastro: " + (dataErro.error || "Verifique os dados."));
         }
     } catch (error) {
         console.error("Erro no cadastro:", error);
-        alert("Erro de conexão. Verifique se o Back-end está rodando.");
+        alert("Erro de conexão com o servidor.");
     }
 }
