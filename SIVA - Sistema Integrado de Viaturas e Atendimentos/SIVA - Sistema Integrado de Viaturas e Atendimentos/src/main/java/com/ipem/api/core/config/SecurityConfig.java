@@ -22,9 +22,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> {
-                    req.requestMatchers("/", "/index.html", "/css/**", "/js/**", "/img/**").permitAll();
+                    req.requestMatchers(HttpMethod.POST, "/usuario/login").permitAll();
                     req.requestMatchers(HttpMethod.POST, "/login").permitAll();
-                    req.anyRequest().authenticated();
+                    req.requestMatchers("/", "/index.html", "/css/**", "/js/**", "/img/**").permitAll();
                 })
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .build();
