@@ -4,6 +4,8 @@ import com.ipem.api.modules.usuario.model.Usuario;
 import com.ipem.api.modules.usuario.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +16,17 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final AuthenticationManager authenticationManager;
+
+    @PostMapping("/login")
+    public ResponseEntity login(@RequestBody @jakarta.validation.Valid com.ipem.api.modules.usuario.dto.LoginDTO data) {
+        var usernamePassword = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                data.email(),
+                data.senha()
+        );
+        var auth = this.authenticationManager.authenticate(usernamePassword);
+        return ResponseEntity.ok("Login realizado com sucesso!");
+    }
 
 
     @GetMapping
